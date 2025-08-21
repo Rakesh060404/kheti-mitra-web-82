@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { User, MapPin, Sprout, Save } from 'lucide-react';
+import { User, MapPin, Sprout, Save, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import AuthForm from '@/components/auth/AuthForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +12,22 @@ import { useToast } from '@/hooks/use-toast';
 
 const Profile = () => {
   const { toast } = useToast();
+  const { user, loading, signOut } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen gradient-earth flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthForm />;
+  }
   const [formData, setFormData] = useState({
     name: 'Rajesh Kumar',
     email: 'rajesh.kumar@example.com',
@@ -196,11 +214,21 @@ const Profile = () => {
 
             <Button 
               onClick={handleSave} 
-              className="w-full" 
+              className="w-full mb-4" 
               size="lg"
             >
               <Save className="w-4 h-4 mr-2" />
               Save Profile
+            </Button>
+            
+            <Button 
+              onClick={signOut} 
+              variant="outline" 
+              className="w-full" 
+              size="lg"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
             </Button>
           </div>
         </div>
