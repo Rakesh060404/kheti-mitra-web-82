@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Agri-Assist Design System - Agricultural theme for Indian farmers
+All colors MUST be HSL for proper theming support.
+*/
+
+@layer base {
+  :root {
+    /* Agricultural Color Palette */
+    --background: 45 40% 98%;
+    --foreground: 155 60% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 155 60% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 155 60% 15%;
+
+    /* Forest Green - Primary agricultural color */
+    --primary: 155 65% 35%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 155 65% 30%;
+
+    /* Sky Blue - Weather and water themed */
+    --secondary: 200 85% 65%;
+    --secondary-foreground: 155 60% 15%;
+
+    /* Warm earth tones */
+    --muted: 45 25% 94%;
+    --muted-foreground: 155 25% 45%;
+
+    /* Warm amber - Harvest themed accent */
+    --accent: 40 85% 60%;
+    --accent-foreground: 155 60% 15%;
+
+    /* Agricultural success green */
+    --success: 120 60% 45%;
+    --success-foreground: 0 0% 98%;
+
+    /* Warning amber for alerts */
+    --warning: 45 90% 60%;
+    --warning-foreground: 155 60% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 155 20% 88%;
+    --input: 155 15% 92%;
+    --ring: 155 65% 35%;
+
+    --radius: 0.75rem;
+
+    /* Agricultural gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(155 65% 35%), hsl(155 65% 45%));
+    --gradient-secondary: linear-gradient(135deg, hsl(200 85% 65%), hsl(200 85% 55%));
+    --gradient-harvest: linear-gradient(135deg, hsl(40 85% 60%), hsl(60 85% 70%));
+    --gradient-earth: linear-gradient(180deg, hsl(45 40% 98%), hsl(155 15% 95%));
+
+    /* Agricultural shadows with green tint */
+    --shadow-soft: 0 2px 8px hsl(155 30% 20% / 0.08);
+    --shadow-medium: 0 4px 16px hsl(155 30% 20% / 0.12);
+    --shadow-strong: 0 8px 32px hsl(155 30% 20% / 0.16);
+
+    /* Smooth agricultural transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    --sidebar-background: 45 35% 96%;
+    --sidebar-foreground: 155 60% 20%;
+    --sidebar-primary: 155 65% 35%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 155 15% 92%;
+    --sidebar-accent-foreground: 155 60% 20%;
+    --sidebar-border: 155 20% 88%;
+    --sidebar-ring: 155 65% 35%;
+  }
+
+  .dark {
+    --background: 155 30% 8%;
+    --foreground: 45 40% 95%;
+
+    --card: 155 25% 10%;
+    --card-foreground: 45 40% 95%;
+
+    --popover: 155 25% 10%;
+    --popover-foreground: 45 40% 95%;
+
+    --primary: 155 60% 50%;
+    --primary-foreground: 155 30% 8%;
+    --primary-hover: 155 60% 45%;
+
+    --secondary: 200 70% 50%;
+    --secondary-foreground: 45 40% 95%;
+
+    --muted: 155 20% 15%;
+    --muted-foreground: 155 15% 65%;
+
+    --accent: 40 75% 55%;
+    --accent-foreground: 155 30% 8%;
+
+    --success: 120 50% 50%;
+    --success-foreground: 155 30% 8%;
+
+    --warning: 45 80% 65%;
+    --warning-foreground: 155 30% 8%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 45 40% 95%;
+
+    --border: 155 20% 20%;
+    --input: 155 15% 18%;
+    --ring: 155 60% 50%;
+
+    --sidebar-background: 155 25% 10%;
+    --sidebar-foreground: 45 35% 90%;
+    --sidebar-primary: 155 60% 50%;
+    --sidebar-primary-foreground: 155 30% 8%;
+    --sidebar-accent: 155 15% 15%;
+    --sidebar-accent-foreground: 45 35% 90%;
+    --sidebar-border: 155 20% 20%;
+    --sidebar-ring: 155 60% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Agricultural utility classes */
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+
+  .gradient-harvest {
+    background: var(--gradient-harvest);
+  }
+
+  .gradient-earth {
+    background: var(--gradient-earth);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-medium {
+    box-shadow: var(--shadow-medium);
+  }
+
+  .shadow-strong {
+    box-shadow: var(--shadow-strong);
+  }
+
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+
+  .transition-spring {
+    transition: var(--transition-spring);
+  }
+}
