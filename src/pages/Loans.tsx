@@ -14,16 +14,28 @@ const Loans = () => {
   const [loanTenure, setLoanTenure] = useState('');
   const [interestRate, setInterestRate] = useState('8.5');
   const [calculatedEMI, setCalculatedEMI] = useState<number | null>(null);
+  const [showLoanForm, setShowLoanForm] = useState(false);
+  const [selectedScheme, setSelectedScheme] = useState<any>(null);
+  const [loanFormData, setLoanFormData] = useState({
+    loanType: '',
+    amount: '',
+    purpose: '',
+    repaymentPeriod: '',
+    collateral: '',
+    cropDetails: '',
+    equipmentDetails: ''
+  });
 
   const loanSchemes = [
     {
       name: 'Kisan Credit Card (KCC)',
-      provider: 'All Major Banks',
+      provider: 'NABARD & All Banks',
       interestRate: '7.0% - 9.0%',
       maxAmount: '₹3 Lakh',
       features: ['No collateral up to ₹1.6L', 'Flexible repayment', 'Insurance coverage'],
       eligibility: 'All farmers with cultivable land',
-      status: 'active'
+      status: 'active',
+      website: 'https://www.sbi.co.in/web/agri-rural/agriculture-banking/crop-loan/kisan-credit-card'
     },
     {
       name: 'PM-KISAN Beneficiary Loan',
@@ -32,16 +44,18 @@ const Loans = () => {
       maxAmount: '₹2 Lakh',
       features: ['Subsidized interest', 'Quick processing', 'Direct benefit transfer'],
       eligibility: 'PM-KISAN beneficiaries',
-      status: 'active'
+      status: 'active',
+      website: 'https://fw.pmkisan.gov.in'
     },
     {
       name: 'Agricultural Gold Loan',
-      provider: 'Private & Public Banks',
+      provider: 'SBI & Other Banks',
       interestRate: '8.0% - 12.0%',
       maxAmount: '₹50 Lakh',
       features: ['Gold as collateral', 'Quick approval', 'Flexible tenure'],
       eligibility: 'Farmers with gold ornaments',
-      status: 'active'
+      status: 'active',
+      website: 'https://sbi.co.in/web/agri-rural/agriculture-banking/gold-loan'
     },
     {
       name: 'Crop Loan',
@@ -50,8 +64,29 @@ const Loans = () => {
       maxAmount: '₹5 Lakh',
       features: ['Seasonal loan', 'Interest subvention', 'Crop insurance linkage'],
       eligibility: 'Farmers with land records',
-      status: 'seasonal'
+      status: 'seasonal',
+      website: 'https://sbi.co.in/web/agri-rural/agriculture-banking/crop-loan'
     },
+    {
+      name: 'PM Fasal Bima Yojana',
+      provider: 'Government of India',
+      interestRate: 'Subsidized',
+      maxAmount: '₹10 Lakh',
+      features: ['Crop insurance', 'Weather protection', 'Low premium'],
+      eligibility: 'All farmers',
+      status: 'active',
+      website: 'https://pmfby.gov.in'
+    },
+    {
+      name: 'MUDRA Loan for Agri',
+      provider: 'MUDRA & Banks',
+      interestRate: '8.5% - 12.0%',
+      maxAmount: '₹10 Lakh',
+      features: ['Micro enterprises', 'Small business', 'Equipment financing'],
+      eligibility: 'Small farmers & entrepreneurs',
+      status: 'active',
+      website: 'https://www.jansamarth.in/business-loan-pradhan-mantri-mudra-yojana-scheme'
+    }
   ];
 
   const calculateEMI = () => {
@@ -68,18 +103,84 @@ const Loans = () => {
     const monthlyRate = parseFloat(interestRate) / 100 / 12;
     const months = parseFloat(loanTenure) * 12;
 
-    const emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / 
-                 (Math.pow(1 + monthlyRate, months) - 1);
-    
+    const emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+      (Math.pow(1 + monthlyRate, months) - 1);
+
     setCalculatedEMI(Math.round(emi));
   };
 
   const applyForLoan = (schemeName: string) => {
-    toast({
-      title: "Application Initiated",
-      description: `Your application for ${schemeName} has been initiated. You will be redirected to the bank's portal.`,
-      variant: "default",
-    });
+    // Find the loan scheme to get its website URL
+    const scheme = loanSchemes.find(s => s.name === schemeName);
+
+    if (scheme && scheme.website) {
+      toast({
+        title: "Redirecting",
+        description: `Opening official application site for ${schemeName}...`,
+        variant: "default",
+      });
+
+      // Open official application website in a new tab for safety
+      window.open(scheme.website, '_blank', 'noopener');
+    } else {
+      toast({
+        title: "Information",
+        description: `Please contact your nearest bank branch for ${schemeName} application.`,
+        variant: "default",
+      });
+    }
+  };
+
+  const submitLoanApplication = async () => {
+    try {
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to apply for a loan.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/loans/apply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(loanFormData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Application Submitted!",
+          description: "Your loan application has been submitted successfully.",
+          variant: "default",
+        });
+        setShowLoanForm(false);
+        setSelectedScheme(null);
+        setLoanFormData({
+          loanType: '',
+          amount: '',
+          purpose: '',
+          repaymentPeriod: '',
+          collateral: '',
+          cropDetails: '',
+          equipmentDetails: ''
+        });
+      } else {
+        throw new Error(data.error?.message || 'Failed to submit application');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || 'Failed to submit loan application',
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -201,7 +302,7 @@ const Loans = () => {
                         <CardTitle className="text-lg text-foreground">{scheme.name}</CardTitle>
                         <CardDescription>{scheme.provider}</CardDescription>
                       </div>
-                      <Badge 
+                      <Badge
                         variant={scheme.status === 'active' ? 'default' : 'secondary'}
                         className={scheme.status === 'active' ? 'bg-success text-success-foreground' : ''}
                       >
@@ -238,17 +339,23 @@ const Loans = () => {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button 
+                      <Button
                         onClick={() => applyForLoan(scheme.name)}
                         className="flex-1"
                       >
                         <CreditCard className="w-4 h-4 mr-2" />
                         Apply Now
                       </Button>
-                      <Button variant="outline" size="sm">
-                        <FileText className="w-4 h-4 mr-2" />
-                        Details
-                      </Button>
+                      {scheme.website && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(scheme.website, '_blank', 'noopener,noreferrer')}
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          Visit Website
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -319,9 +426,167 @@ const Loans = () => {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* External Resources */}
+            <Card className="shadow-medium border-border mt-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Info className="w-5 h-5 text-accent" />
+                  Additional Resources
+                </CardTitle>
+                <CardDescription>
+                  Useful links for agricultural loans and financial assistance
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button
+                    variant="outline"
+                    className="justify-start h-auto p-4"
+                    onClick={() => window.open('https://www.nabard.org/', '_blank', 'noopener,noreferrer')}
+                  >
+                    <div className="text-left">
+                      <div className="font-semibold">NABARD</div>
+                      <div className="text-sm text-muted-foreground">National Bank for Agriculture</div>
+                    </div>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="justify-start h-auto p-4"
+                    onClick={() => window.open('https://www.rbi.org.in/', '_blank', 'noopener,noreferrer')}
+                  >
+                    <div className="text-left">
+                      <div className="font-semibold">RBI</div>
+                      <div className="text-sm text-muted-foreground">Reserve Bank of India</div>
+                    </div>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="justify-start h-auto p-4"
+                    onClick={() => window.open('https://www.agricoop.gov.in/', '_blank', 'noopener,noreferrer')}
+                  >
+                    <div className="text-left">
+                      <div className="font-semibold">Ministry of Agriculture</div>
+                      <div className="text-sm text-muted-foreground">Government Schemes</div>
+                    </div>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="justify-start h-auto p-4"
+                    onClick={() => window.open('https://www.sbi.co.in/web/agriculture', '_blank', 'noopener,noreferrer')}
+                  >
+                    <div className="text-left">
+                      <div className="font-semibold">SBI Agriculture</div>
+                      <div className="text-sm text-muted-foreground">State Bank of India</div>
+                    </div>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
+
+      {/* Loan Application Modal */}
+      {showLoanForm && selectedScheme && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Apply for {selectedScheme.name}</h3>
+              <button
+                onClick={() => setShowLoanForm(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); submitLoanApplication(); }} className="space-y-4">
+              <div>
+                <Label htmlFor="loanType">Loan Type</Label>
+                <Select value={loanFormData.loanType} onValueChange={(value) => setLoanFormData({ ...loanFormData, loanType: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select loan type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="crop">Crop Loan</SelectItem>
+                    <SelectItem value="equipment">Equipment Loan</SelectItem>
+                    <SelectItem value="infrastructure">Infrastructure Loan</SelectItem>
+                    <SelectItem value="emergency">Emergency Loan</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="amount">Loan Amount (₹)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="e.g., 100000"
+                  value={loanFormData.amount}
+                  onChange={(e) => setLoanFormData({ ...loanFormData, amount: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="purpose">Purpose</Label>
+                <Input
+                  id="purpose"
+                  type="text"
+                  placeholder="e.g., Crop farming, Equipment purchase"
+                  value={loanFormData.purpose}
+                  onChange={(e) => setLoanFormData({ ...loanFormData, purpose: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="repaymentPeriod">Repayment Period (Months)</Label>
+                <Select value={loanFormData.repaymentPeriod} onValueChange={(value) => setLoanFormData({ ...loanFormData, repaymentPeriod: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="6">6 Months</SelectItem>
+                    <SelectItem value="12">12 Months</SelectItem>
+                    <SelectItem value="24">24 Months</SelectItem>
+                    <SelectItem value="36">36 Months</SelectItem>
+                    <SelectItem value="60">60 Months</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="collateral">Collateral (Optional)</Label>
+                <Input
+                  id="collateral"
+                  type="text"
+                  placeholder="e.g., Land, Equipment"
+                  value={loanFormData.collateral}
+                  onChange={(e) => setLoanFormData({ ...loanFormData, collateral: e.target.value })}
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button type="submit" className="flex-1">
+                  Submit Application
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowLoanForm(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

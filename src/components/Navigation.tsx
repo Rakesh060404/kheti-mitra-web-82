@@ -16,6 +16,7 @@ const Navigation = () => {
     { name: 'Loans', href: '/loans', icon: '🏦' },
     { name: 'Insurance', href: '/insurance', icon: '🛡️' },
     { name: 'Gov Schemes', href: '/schemes', icon: '🏛️' },
+    { name: 'Chatbot', href: '/chatbot', icon: '🤖' },
     { name: 'Profile', href: '/profile', icon: '👤' },
   ];
 

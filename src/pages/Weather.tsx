@@ -1,11 +1,12 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Cloud, 
-  Sun, 
-  CloudRain, 
-  Thermometer, 
-  Droplets, 
+import {
+  Cloud,
+  Sun,
+  CloudRain,
+  Thermometer,
+  Droplets,
   Wind,
   Eye,
   MapPin,
@@ -13,43 +14,90 @@ import {
   Lightbulb
 } from 'lucide-react';
 
-const Weather = () => {
-  const currentWeather = {
-    location: 'Delhi, India',
-    pincode: '110001',
-    temperature: 28,
-    condition: 'Partly Cloudy',
-    humidity: 65,
-    windSpeed: 12,
-    visibility: 8,
-    uvIndex: 6,
-  };
+const WEATHER_API_KEY = "ec52d9f52160958cd8502b156ee92114"; // <-- Replace with your API key
+const CITY = "Delhi";
+const COUNTRY = "IN";
 
-  const forecast = [
-    { day: 'Today', high: 30, low: 22, condition: 'Sunny', icon: Sun, precipitation: 0 },
-    { day: 'Tomorrow', high: 32, low: 24, condition: 'Partly Cloudy', icon: Cloud, precipitation: 10 },
-    { day: 'Wed', high: 28, low: 20, condition: 'Light Rain', icon: CloudRain, precipitation: 70 },
-    { day: 'Thu', high: 26, low: 18, condition: 'Cloudy', icon: Cloud, precipitation: 30 },
-    { day: 'Fri', high: 29, low: 21, condition: 'Sunny', icon: Sun, precipitation: 5 },
-  ];
+const Weather = () => {
+  const [currentWeather, setCurrentWeather] = useState<any>(null);
+  const [forecast, setForecast] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      setLoading(true);
+      // Current weather
+      const currentRes = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${CITY},${COUNTRY}&units=metric&appid=${WEATHER_API_KEY}`
+      );
+      const currentData = await currentRes.json();
+
+      // 5-day forecast
+      const forecastRes = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${CITY},${COUNTRY}&units=metric&appid=${WEATHER_API_KEY}`
+      );
+      const forecastData = await forecastRes.json();
+
+      setCurrentWeather({
+        location: `${currentData.name}, ${currentData.sys.country}`,
+        temperature: Math.round(currentData.main.temp),
+        condition: currentData.weather[0].main,
+        humidity: currentData.main.humidity,
+        windSpeed: currentData.wind.speed,
+        visibility: currentData.visibility / 1000,
+        uvIndex: 6, // OpenWeatherMap free API does not provide UV index
+        pincode: "110001", // Static or fetch from another API
+      });
+
+      // Group forecast by day
+      const daily: any = {};
+      forecastData.list.forEach((item: any) => {
+        const date = new Date(item.dt_txt);
+        const day = date.toLocaleDateString("en-US", { weekday: "short" });
+        if (!daily[day]) {
+          daily[day] = {
+            day,
+            high: item.main.temp_max,
+            low: item.main.temp_min,
+            condition: item.weather[0].main,
+            precipitation: item.pop ? Math.round(item.pop * 100) : 0,
+            icon: item.weather[0].main === "Rain"
+              ? CloudRain
+              : item.weather[0].main === "Clouds"
+                ? Cloud
+                : Sun,
+          };
+        } else {
+          daily[day].high = Math.max(daily[day].high, item.main.temp_max);
+          daily[day].low = Math.min(daily[day].low, item.main.temp_min);
+        }
+      });
+      setForecast(Object.values(daily).slice(0, 5));
+      setLoading(false);
+    };
+
+    fetchWeather();
+  }, []);
 
   const recommendations = [
-    { 
-      title: 'Perfect for Field Work', 
-      description: 'Low humidity and mild temperature - ideal for planting and harvesting activities.',
-      type: 'success' 
+    {
+      title: 'Check for Rain',
+      description: 'Rain in forecast - plan irrigation and field work accordingly.',
+      type: 'info'
     },
-    { 
-      title: 'Rain Expected Wednesday', 
-      description: 'Plan irrigation accordingly. Good natural watering for young crops.',
-      type: 'info' 
-    },
-    { 
-      title: 'UV Protection Needed', 
+    {
+      title: 'UV Protection Needed',
       description: 'High UV index - use protective clothing during peak hours (11 AM - 3 PM).',
-      type: 'warning' 
+      type: 'warning'
+    },
+    {
+      title: 'Good for Field Work',
+      description: 'Mild temperature and low wind - ideal for planting and harvesting.',
+      type: 'success'
     },
   ];
+
+  if (loading || !currentWeather) return <div className="text-center py-20">Loading weather data...</div>;
 
   return (
     <div className="min-h-screen gradient-earth py-8">
@@ -128,7 +176,7 @@ const Weather = () => {
                 {recommendations.map((rec, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex items-start gap-2">
-                      <Badge 
+                      <Badge
                         variant={rec.type === 'success' ? 'default' : rec.type === 'warning' ? 'destructive' : 'secondary'}
                         className="mt-1"
                       >
@@ -165,8 +213,8 @@ const Weather = () => {
                   <day.icon className="w-8 h-8 mx-auto mb-3 text-primary" />
                   <div className="space-y-1">
                     <div className="flex justify-center gap-2 text-sm">
-                      <span className="font-semibold text-foreground">{day.high}°</span>
-                      <span className="text-muted-foreground">{day.low}°</span>
+                      <span className="font-semibold text-foreground">{Math.round(day.high)}°</span>
+                      <span className="text-muted-foreground">{Math.round(day.low)}°</span>
                     </div>
                     <div className="text-xs text-muted-foreground">{day.condition}</div>
                     <div className="flex items-center justify-center gap-1 text-xs text-secondary">
@@ -185,15 +233,15 @@ const Weather = () => {
           <Card className="shadow-soft border-border">
             <CardContent className="p-6 text-center">
               <Thermometer className="w-8 h-8 mx-auto mb-3 text-primary" />
-              <div className="text-2xl font-bold text-foreground mb-1">28°C</div>
-              <div className="text-sm text-muted-foreground">Feels like 31°C</div>
+              <div className="text-2xl font-bold text-foreground mb-1">{currentWeather.temperature}°C</div>
+              <div className="text-sm text-muted-foreground">Feels like {currentWeather.temperature + 3}°C</div>
             </CardContent>
           </Card>
 
           <Card className="shadow-soft border-border">
             <CardContent className="p-6 text-center">
               <Droplets className="w-8 h-8 mx-auto mb-3 text-secondary" />
-              <div className="text-2xl font-bold text-foreground mb-1">65%</div>
+              <div className="text-2xl font-bold text-foreground mb-1">{currentWeather.humidity}%</div>
               <div className="text-sm text-muted-foreground">Optimal for crops</div>
             </CardContent>
           </Card>
@@ -201,7 +249,7 @@ const Weather = () => {
           <Card className="shadow-soft border-border">
             <CardContent className="p-6 text-center">
               <Wind className="w-8 h-8 mx-auto mb-3 text-accent" />
-              <div className="text-2xl font-bold text-foreground mb-1">12 km/h</div>
+              <div className="text-2xl font-bold text-foreground mb-1">{currentWeather.windSpeed} km/h</div>
               <div className="text-sm text-muted-foreground">Light breeze</div>
             </CardContent>
           </Card>
@@ -209,7 +257,7 @@ const Weather = () => {
           <Card className="shadow-soft border-border">
             <CardContent className="p-6 text-center">
               <Sun className="w-8 h-8 mx-auto mb-3 text-warning" />
-              <div className="text-2xl font-bold text-foreground mb-1">6 UV</div>
+              <div className="text-2xl font-bold text-foreground mb-1">{currentWeather.uvIndex} UV</div>
               <div className="text-sm text-muted-foreground">High exposure</div>
             </CardContent>
           </Card>

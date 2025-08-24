@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { 
-  Cloud, 
-  Bug, 
-  TrendingUp, 
-  CreditCard, 
-  Shield, 
-  FileText, 
+import {
+  Cloud,
+  Bug,
+  TrendingUp,
+  CreditCard,
+  Shield,
+  FileText,
   Lightbulb,
   MapPin,
   Thermometer,
@@ -74,14 +74,14 @@ const Dashboard = () => {
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <img 
-            src={heroImage} 
-            alt="Indian agriculture landscape" 
+          <img
+            src={heroImage}
+            alt="Indian agriculture landscape"
             className="w-full h-full object-cover opacity-20"
           />
           <div className="absolute inset-0 gradient-primary opacity-80"></div>
         </div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
@@ -91,17 +91,17 @@ const Dashboard = () => {
               Empowering Indian farmers with modern agricultural technology and comprehensive farming solutions
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                variant="secondary" 
+              <Button
+                size="lg"
+                variant="secondary"
                 className="text-lg px-8 py-3 shadow-medium hover:shadow-strong transition-spring"
               >
                 <Bug className="w-5 h-5 mr-2" />
                 Quick Pest Detection
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
+              <Button
+                size="lg"
+                variant="outline"
                 className="text-lg px-8 py-3 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
               >
                 <Cloud className="w-5 h-5 mr-2" />
@@ -184,14 +184,35 @@ const Dashboard = () => {
               <p className="text-xl text-white/90 mb-6">
                 Join thousands of farmers already using Agri-Assist to increase their crop yield and profits
               </p>
-              <Button 
-                size="lg" 
-                variant="secondary" 
+              <Button
+                size="lg"
+                variant="secondary"
                 className="text-lg px-8 py-3"
               >
                 Complete Your Profile
               </Button>
             </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Chatbot Assistant Card */}
+      <section className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card>
+            <div className="flex flex-col items-start p-6">
+              <div className="bg-purple-600 rounded-full p-2 mb-4">
+                {/* You can use a chatbot icon here */}
+                <span role="img" aria-label="Chatbot">🤖</span>
+              </div>
+              <h2 className="text-lg font-semibold mb-2">Chatbot Assistant</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Get instant answers about insurance, loans, and government schemes.
+              </p>
+              <Button asChild>
+                <a href="/chatbot">Get Started</a>
+              </Button>
+            </div>
           </Card>
         </div>
       </section>
