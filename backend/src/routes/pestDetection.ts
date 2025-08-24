@@ -84,3 +84,6 @@ router.get('/admin/detections', authenticateToken, pestDetectionController.getAl
 router.put('/admin/detections/:id/status', authenticateToken, pestDetectionController.updateDetectionStatus);
 
 export default router;
+
+// Example fetch request (to be used in the client-side code, not in this file)
+// fetch("https://your-pest-api.com/detect", { ... })

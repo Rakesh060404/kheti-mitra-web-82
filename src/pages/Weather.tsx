@@ -13,70 +13,99 @@ import {
   Calendar,
   Lightbulb
 } from 'lucide-react';
+import { Link } from "react-router-dom";
 
-const WEATHER_API_KEY = "ec52d9f52160958cd8502b156ee92114"; // <-- Replace with your API key
+const WEATHER_API_KEY = "7f57cb26151efde910bd11bfa1e1d66f"; // <-- Replace with your API key
 const CITY = "Delhi";
 const COUNTRY = "IN";
 
 const Weather = () => {
+  const [pincode, setPincode] = useState("110001");
   const [currentWeather, setCurrentWeather] = useState<any>(null);
   const [forecast, setForecast] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchWeather = async () => {
-      setLoading(true);
-      // Current weather
-      const currentRes = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${CITY},${COUNTRY}&units=metric&appid=${WEATHER_API_KEY}`
-      );
-      const currentData = await currentRes.json();
+  // Helper to get city from pincode using an API (example: Zippopotam or India Post API)
+  const getCityFromPincode = async (pin: string) => {
+    const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+    const data = await res.json();
+    if (data[0].Status === "Success") {
+      let city = data[0].PostOffice[0].District;
+      // Fix for Delhi region
+      if (city.includes("Delhi")) {
+        city = "Delhi";
+      }
+      return city;
+    }
+    return null;
+  };
 
-      // 5-day forecast
-      const forecastRes = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${CITY},${COUNTRY}&units=metric&appid=${WEATHER_API_KEY}`
-      );
-      const forecastData = await forecastRes.json();
-
-      setCurrentWeather({
-        location: `${currentData.name}, ${currentData.sys.country}`,
-        temperature: Math.round(currentData.main.temp),
-        condition: currentData.weather[0].main,
-        humidity: currentData.main.humidity,
-        windSpeed: currentData.wind.speed,
-        visibility: currentData.visibility / 1000,
-        uvIndex: 6, // OpenWeatherMap free API does not provide UV index
-        pincode: "110001", // Static or fetch from another API
-      });
-
-      // Group forecast by day
-      const daily: any = {};
-      forecastData.list.forEach((item: any) => {
-        const date = new Date(item.dt_txt);
-        const day = date.toLocaleDateString("en-US", { weekday: "short" });
-        if (!daily[day]) {
-          daily[day] = {
-            day,
-            high: item.main.temp_max,
-            low: item.main.temp_min,
-            condition: item.weather[0].main,
-            precipitation: item.pop ? Math.round(item.pop * 100) : 0,
-            icon: item.weather[0].main === "Rain"
-              ? CloudRain
-              : item.weather[0].main === "Clouds"
-                ? Cloud
-                : Sun,
-          };
-        } else {
-          daily[day].high = Math.max(daily[day].high, item.main.temp_max);
-          daily[day].low = Math.min(daily[day].low, item.main.temp_min);
-        }
-      });
-      setForecast(Object.values(daily).slice(0, 5));
+  const fetchWeather = async (pin: string) => {
+    setLoading(true);
+    const city = await getCityFromPincode(pin);
+    if (!city) {
+      alert("Invalid pincode or city not found.");
       setLoading(false);
-    };
+      return;
+    }
+    // Fetch weather for the city
+    const currentRes = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${city},IN&units=metric&appid=${WEATHER_API_KEY}`
+    );
+    const currentData = await currentRes.json();
 
-    fetchWeather();
+    if (!currentData || !currentData.sys) {
+      setLoading(false);
+      alert("Weather data not found for this location.");
+      return;
+    }
+
+    const forecastRes = await fetch(
+      `https://api.openweathermap.org/data/2.5/forecast?q=${city},IN&units=metric&appid=${WEATHER_API_KEY}`
+    );
+    const forecastData = await forecastRes.json();
+
+    setCurrentWeather({
+      location: `${currentData.name}, ${currentData.sys.country}`,
+      temperature: Math.round(currentData.main.temp),
+      condition: currentData.weather[0].main,
+      humidity: currentData.main.humidity,
+      windSpeed: currentData.wind.speed,
+      visibility: currentData.visibility / 1000,
+      uvIndex: 6,
+      pincode: pin,
+    });
+
+    // Group forecast by day
+    const daily: any = {};
+    forecastData.list.forEach((item: any) => {
+      const date = new Date(item.dt_txt);
+      const day = date.toLocaleDateString("en-US", { weekday: "short" });
+      if (!daily[day]) {
+        daily[day] = {
+          day,
+          high: item.main.temp_max,
+          low: item.main.temp_min,
+          condition: item.weather[0].main,
+          precipitation: item.pop ? Math.round(item.pop * 100) : 0,
+          icon: item.weather[0].main === "Rain"
+            ? CloudRain
+            : item.weather[0].main === "Clouds"
+              ? Cloud
+              : Sun,
+        };
+      } else {
+        daily[day].high = Math.max(daily[day].high, item.main.temp_max);
+        daily[day].low = Math.min(daily[day].low, item.main.temp_min);
+      }
+    });
+    setForecast(Object.values(daily).slice(0, 5));
+    setLoading(false);
+  };
+
+  // Initial fetch for default pincode
+  useEffect(() => {
+    fetchWeather(pincode);
   }, []);
 
   const recommendations = [
@@ -109,6 +138,27 @@ const Weather = () => {
           <p className="text-xl text-muted-foreground">
             5-day weather prediction with agricultural recommendations
           </p>
+          <div className="flex flex-col items-center gap-2 mt-4">
+            <label htmlFor="pincode" className="text-base text-muted-foreground font-medium mb-1">
+              Enter your city pincode
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="pincode"
+                type="text"
+                value={pincode}
+                onChange={e => setPincode(e.target.value)}
+                placeholder="e.g. 110001"
+                className="border px-4 py-2 rounded"
+              />
+              <button
+                onClick={() => fetchWeather(pincode)}
+                className="bg-green-600 text-white px-4 py-2 rounded"
+              >
+                Get Weather
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Current Weather */}
@@ -261,6 +311,22 @@ const Weather = () => {
               <div className="text-sm text-muted-foreground">High exposure</div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-center gap-6 mt-8">
+          <Link to="/pest-detection">
+            <button className="bg-blue-400 text-white px-8 py-4 rounded-lg flex items-center gap-2 font-semibold text-lg shadow hover:bg-blue-500 transition">
+              <span role="img" aria-label="Pest">🦗</span>
+              Quick Pest Detection
+            </button>
+          </Link>
+          <Link to="/weather">
+            <button className="bg-green-700 text-white px-8 py-4 rounded-lg flex items-center gap-2 font-semibold text-lg shadow hover:bg-green-800 transition">
+              <span role="img" aria-label="Weather">☁️</span>
+              Check Weather
+            </button>
+          </Link>
         </div>
       </div>
     </div>
